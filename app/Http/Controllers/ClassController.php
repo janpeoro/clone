@@ -59,5 +59,52 @@ class ClassController extends Controller
         return redirect()->back()->with('success', 'Joined class successfully!');
     }
 
+  
+  
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'class_name' => 'required|string|max:255',
+            'subject' => 'required|string|max:255',
+            'section' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:20480',
+            'schedule' => 'required|string|max:255',
+            'room' => 'required|string|max:255',
+        ]);
+
+        $class = Classroom::findOrFail($id);
+        $class->class_name = $request->input('class_name');
+        $class->subject = $request->input('subject');
+
+        // If a new class image is uploaded, handle the file upload
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('class_images', 'public');
+            // Delete the old image if it exists
+        if ($class->image_path) {
+            \Storage::disk('public')->delete($class->image_path);
+        }
+
+        $class->image_path = $imagePath; // This is the correct field
+
+        }
+
+        $class->section = $request->input('section');
+        $class->schedule = $request->input('schedule');
+        $class->room = $request->input('room');
+
+        // Save the updated class to the database
+        $class->save();
+        
+        // Redirect back with a success message
+        return redirect()->back()->with('success', 'Class updated successfully!');
+    }
+    
+    public function destroy($id)
+    {
+        $class = Classroom::findOrFail($id);
+        $class->delete(); // Delete the class
+        return redirect()->back()->with('success', 'Class deleted successfully!');
+    }
+
     
 }
